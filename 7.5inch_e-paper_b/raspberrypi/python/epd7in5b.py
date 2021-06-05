@@ -195,6 +195,38 @@ class EPD:
         self.delay_ms(100)
         self.wait_until_idle()
 
+    def display_frame(self, frame_buffer_black, frame_buffer_red):
+        self.send_command(DATA_START_TRANSMISSION_1)
+        for i in range(0, self.width / 8 * self.height):
+            temp1 = frame_buffer_black[i]
+            temp2 = frame_buffer_red[i]
+            j = 0
+            while (j < 8):
+                if ((temp2 & 0x80) == 0x00):
+                    temp3 = 0x04                #red
+                elif ((temp1 & 0x80) == 0x00):
+                    temp3 = 0x00                #black
+                else:
+                    temp3 = 0x03                #white
+                
+                temp3 = (temp3 << 4) & 0xFF
+                temp1 = (temp1 << 1) & 0xFF
+                temp2 = (temp2 << 1) & 0xFF
+                j += 1
+                if((temp2 & 0x80) == 0x00):
+                    temp3 |= 0x04              #red
+                elif ((temp1 & 0x80) == 0x00):
+                    temp3 |= 0x00              #black
+                else:
+                    temp3 |= 0x03              #white
+                temp1 = (temp1 << 1) & 0xFF
+                temp2 = (temp2 << 1) & 0xFF
+                self.send_data(temp3)
+                j += 1
+        self.send_command(DISPLAY_REFRESH)
+        self.delay_ms(50)
+        self.wait_until_idle()
+
     def sleep(self):
         self.send_command(POWER_OFF)
         self.wait_until_idle()
